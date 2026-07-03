@@ -1,4 +1,43 @@
+use std::borrow::Cow;
+use std::path::Path;
+
 use aionui_db::init_database_memory;
+use sqlx::migrate::Migrator;
+use sqlx::sqlite::SqlitePoolOptions;
+
+async fn run_migrations_through(pool: &sqlx::SqlitePool, max_version: i64) {
+    let full = Migrator::new(Path::new("migrations")).await.unwrap();
+    let migrations = full
+        .migrations
+        .iter()
+        .filter(|migration| migration.version <= max_version)
+        .cloned()
+        .collect::<Vec<_>>();
+    let migrator = Migrator {
+        migrations: Cow::Owned(migrations),
+        ignore_missing: false,
+        locking: true,
+        no_tx: false,
+    };
+    migrator.run(pool).await.unwrap();
+}
+
+async fn run_migration(pool: &sqlx::SqlitePool, version: i64) {
+    let full = Migrator::new(Path::new("migrations")).await.unwrap();
+    let migrations = full
+        .migrations
+        .iter()
+        .filter(|migration| migration.version == version)
+        .cloned()
+        .collect::<Vec<_>>();
+    let migrator = Migrator {
+        migrations: Cow::Owned(migrations),
+        ignore_missing: true,
+        locking: true,
+        no_tx: false,
+    };
+    migrator.run(pool).await.unwrap();
+}
 
 #[tokio::test]
 async fn migration_creates_assistant_unification_tables_and_keeps_legacy_tables() {
@@ -111,6 +150,57 @@ async fn assistant_agent_identity_columns_are_named_for_agent_metadata_id() {
             .unwrap();
     assert!(snapshot_columns.iter().any(|name| name == "agent_id"));
     assert!(!snapshot_columns.iter().any(|name| name == "agent_backend"));
+}
+
+#[tokio::test]
+async fn migration_017_runs_when_snapshot_identity_columns_are_already_absent() {
+    let pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect("sqlite::memory:")
+        .await
+        .unwrap();
+
+    run_migrations_through(&pool, 16).await;
+
+    for column_name in ["assistant_name", "assistant_avatar_type", "assistant_avatar_value"] {
+        sqlx::query(&format!(
+            "ALTER TABLE conversation_assistant_snapshots DROP COLUMN {column_name}"
+        ))
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+
+    run_migration(&pool, 17).await;
+
+    let removed_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM pragma_table_info('conversation_assistant_snapshots')
+         WHERE name IN ('assistant_name', 'assistant_avatar_type', 'assistant_avatar_value')",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(removed_count, 0);
+
+    let index_names: Vec<String> = sqlx::query_scalar(
+        "SELECT name FROM sqlite_master
+         WHERE type = 'index'
+           AND name IN (
+               'idx_conversation_assistant_snapshots_agent_id',
+               'idx_conversation_assistant_snapshots_assistant_definition_id'
+           )
+         ORDER BY name",
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        index_names,
+        vec![
+            "idx_conversation_assistant_snapshots_agent_id".to_string(),
+            "idx_conversation_assistant_snapshots_assistant_definition_id".to_string(),
+        ]
+    );
 }
 
 #[tokio::test]
