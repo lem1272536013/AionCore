@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.43](https://github.com/iOfficeAI/AionCore/compare/v0.1.42...v0.1.43) (2026-07-06)
+
+
+### Features
+
+* **assistant:** persist thought-level defaults ([#574](https://github.com/iOfficeAI/AionCore/issues/574)) ([dd9f299](https://github.com/iOfficeAI/AionCore/commit/dd9f29967270f4e7263484532fad3b2199ba1894))
+
 ## [0.1.42](https://github.com/iOfficeAI/AionCore/compare/v0.1.41...v0.1.42) (2026-07-03)
 
 
