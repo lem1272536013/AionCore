@@ -1,7 +1,7 @@
 ---
 name: aionui-config
 description: >-
-  Configure AionUi itself through its backend API — create and edit assistants (name, avatar, system prompt, quick-start prompts, engine), import and attach skills, manage MCP servers, configure LLM providers (add/edit a model endpoint, set the API key, fetch the model list, pick the default model), change app/UI settings (language, theme, font size, zoom, notifications), and create or manage scheduled tasks (cron jobs) from a natural-language schedule. Use when the user wants you to set up an AionUi assistant, sink a skill into AionUi's skill registry, attach skills to an assistant, change an assistant's avatar or system prompt, add or configure an MCP server, add an LLM/model provider or API key, switch the default model, change the theme or language, schedule a recurring or one-off task ("every morning at 9", "remind me in 2 hours", "run this daily"), or otherwise configure their AionUi installation. This is "Agent-assisted AionUi configuration": you act on the user's behalf via the local backend.
+  Configure Xyon itself through its backend API — create and edit assistants (name, avatar, system prompt, quick-start prompts, engine), import and attach skills, manage MCP servers, configure LLM providers (add/edit a model endpoint, set the API key, fetch the model list, pick the default model), change app/UI settings (language, theme, font size, zoom, notifications), and create or manage scheduled tasks (cron jobs) from a natural-language schedule. Use when the user wants you to set up a Xyon assistant, sink a skill into Xyon's skill registry, attach skills to an assistant, change an assistant's avatar or system prompt, add or configure an MCP server, add an LLM/model provider or API key, switch the default model, change the theme or language, schedule a recurring or one-off task ("every morning at 9", "remind me in 2 hours", "run this daily"), or otherwise configure their Xyon installation. This is "Agent-assisted Xyon configuration": you act on the user's behalf via the local backend.
 ---
 
 > **⚠️ Platform note — read before running any command.** The shell snippets in this skill are written for **macOS / Linux** (bash/zsh). Always check which OS you are on first. On **Windows** do **not** run them verbatim — the underlying tool/CLI commands are usually cross-platform, but the surrounding shell syntax is not. Translate it to PowerShell before running:
@@ -20,16 +20,16 @@ description: >-
 >
 > If a command has no obvious Windows equivalent, prefer the built-in file/HTTP tools over raw shell.
 
-# AionUi Config
+# Xyon Config
 
-Configure a running AionUi installation by calling its backend (aioncore) REST API.
+Configure a running Xyon installation by calling its backend (aioncore) REST API.
 Everything here has been verified end-to-end against a live backend.
 
 ## How it works
 
-AionUi is front/back separated. The Electron UI talks to a local `aioncore`
+Xyon is front/back separated. The Electron UI talks to a local `aioncore`
 backend over HTTP. Assistants, skills, and their rules all live behind that
-backend — there is no config file to edit anymore. You configure AionUi by
+backend — there is no config file to edit anymore. You configure Xyon by
 calling the API.
 
 The backend port is **dynamic** (it changes every launch and is not persisted
@@ -44,7 +44,7 @@ cd <this-skill-dir>
 python3 scripts/aionui_api.py discover          # prints e.g. http://127.0.0.1:57282
 ```
 
-If `discover` fails, AionUi is not running — tell the user to launch it, don't guess a port.
+If `discover` fails, Xyon is not running — tell the user to launch it, don't guess a port.
 
 Helper commands (all print the JSON response):
 
@@ -341,7 +341,7 @@ python3 scripts/aionui_api.py delete /api/skills/<skill-name>
 
 ## MCP servers
 
-AionUi can connect to MCP servers. The whole lifecycle is available under
+Xyon can connect to MCP servers. The whole lifecycle is available under
 `/api/mcp/*` and is verified end-to-end (create / list / toggle / delete).
 
 ### List
@@ -619,7 +619,7 @@ python3 scripts/aionui_api.py post /api/cron/jobs '{
   "conversation_id": "<conv-id>",
   "created_by": "agent",
   "execution_mode": "new_conversation",
-  "agent_config": {"name": "AionUi Butler", "assistant_id": "<assistant-id>"}
+  "agent_config": {"name": "Xyon小优管家", "assistant_id": "<assistant-id>"}
 }'
 ```
 
@@ -687,7 +687,7 @@ After a configuration task, confirm with reads:
 7. Settings changed? `get /api/settings/client` shows the new value.
 8. Scheduled task created? `get /api/cron/jobs` lists it, `enabled: true`, with
    the expected `schedule` and a non-null `state.next_run_at_ms`.
-9. Tell the user to refresh / reopen the AionUi view to see changes.
+9. Tell the user to refresh / reopen the Xyon view to see changes.
 
 ## Out of scope (handled elsewhere)
 

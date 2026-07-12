@@ -291,6 +291,23 @@ mod tests {
     }
 
     #[test]
+    fn embedded_xyon_butler_uses_product_branding() {
+        let reg = BuiltinAssistantRegistry::load_embedded();
+        let butler = reg.get("aionui-assistant").expect("Xyon butler should be included");
+
+        assert_eq!(butler.name, "Xyon小优管家");
+        assert_eq!(butler.name_i18n.get("zh-CN").map(String::as_str), Some("Xyon小优管家"));
+
+        let rules = reg
+            .rule_bytes("aionui-assistant", "zh-CN")
+            .expect("Xyon butler zh-CN rules should resolve");
+        let rules = std::str::from_utf8(&rules).expect("Xyon butler rules should be valid utf-8");
+        assert!(rules.starts_with("# Xyon小优管家"));
+        assert!(rules.contains("你是 Xyon小优管家"));
+        assert!(!rules.contains("AionUi"));
+    }
+
+    #[test]
     fn load_embedded_rule_bytes_available_for_shipped_preset() {
         let reg = BuiltinAssistantRegistry::load_embedded();
         let bytes = reg

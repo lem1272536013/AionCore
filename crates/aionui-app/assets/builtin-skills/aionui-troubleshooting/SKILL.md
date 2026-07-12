@@ -1,7 +1,7 @@
 ---
 name: aionui-troubleshooting
 description: >-
-  Diagnose a running AionUi installation — locate and inspect conversations (including stuck/running ones), read aioncore logs, check LLM provider health, list scheduled cron jobs and their last run status, inspect teams and member state, and check MCP server health. Use when the user reports that AionUi is misbehaving: a conversation is stuck or errored, an LLM/provider call is failing, a scheduled task did not run, an MCP server has no tools, a team member is hung, or they just ask "what's wrong with AionUi" / "排查一下 aionui". Engine-agnostic — works the same for claude / aionrs / gemini / openclaw conversations.
+  Diagnose a running Xyon installation — locate and inspect conversations (including stuck/running ones), read aioncore logs, check LLM provider health, list scheduled cron jobs and their last run status, inspect teams and member state, and check MCP server health. Use when the user reports that Xyon is misbehaving: a conversation is stuck or errored, an LLM/provider call is failing, a scheduled task did not run, an MCP server has no tools, a team member is hung, or they just ask "what's wrong with Xyon" / "排查一下 Xyon". Engine-agnostic — works the same for claude / aionrs / gemini / openclaw conversations.
 ---
 
 > **⚠️ Platform note — read before running any command.** The shell snippets in this skill are written for **macOS / Linux** (bash/zsh). Always check which OS you are on first. On **Windows** do **not** run them verbatim — the underlying tool/CLI commands are usually cross-platform, but the surrounding shell syntax is not. Translate it to PowerShell before running:
@@ -20,14 +20,14 @@ description: >-
 >
 > If a command has no obvious Windows equivalent, prefer the built-in file/HTTP tools over raw shell.
 
-# AionUi Troubleshooting
+# Xyon Troubleshooting
 
-Diagnose a running AionUi installation by reading its **project-level** data:
+Diagnose a running Xyon installation by reading its **project-level** data:
 the aioncore REST API, the unified SQLite store, and the aioncore log files.
 
-This is **engine-agnostic**. AionUi runs conversations on several backends
+This is **engine-agnostic**. Xyon runs conversations on several backends
 (`acp`/claude, `aionrs`, `gemini`), but troubleshooting goes
-through AionUi's own data — the `conversations` API, the unified `messages`
+through Xyon's own data — the `conversations` API, the unified `messages`
 table, provider health, crons, teams, MCP — so the same checks work no matter
 which engine a conversation uses. Do **not** reach into engine-specific
 transcript files (e.g. `~/.claude/projects/*.jsonl` or
@@ -36,7 +36,7 @@ backend and are already covered by the unified `messages` table.
 
 ## How it works
 
-AionUi is front/back separated: the Electron UI talks to a local `aioncore`
+Xyon is front/back separated: the Electron UI talks to a local `aioncore`
 backend. The backend's REST port is **dynamic** (aioncore launches with
 `--port 0`), so the first step is always discovery. The helper script discovers
 everything from the running process and wraps every read.
@@ -71,7 +71,7 @@ How discovery works (and why it's robust):
 - The REST port is NOT in argv (`--port 0`), so the script probes every port the
   process listens on and keeps the one that answers `/health` with `status:ok`.
 
-If `discover` exits with an error / code 3, AionUi is **not running**. Tell the
+If `discover` exits with an error / code 3, Xyon is **not running**. Tell the
 user to launch it — do not guess a port.
 
 > The script redacts secrets (`api_key`, tokens, …) in all output. Provider
@@ -80,7 +80,7 @@ user to launch it — do not guess a port.
 
 ## Golden rule: start wide, then drill in
 
-For "something is wrong with AionUi" with no specifics, run `overview` first —
+For "something is wrong with Xyon" with no specifics, run `overview` first —
 it's a one-shot snapshot across health, providers, MCP, crons, and running
 conversations. Then drill into whatever it flags.
 
