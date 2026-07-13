@@ -1432,8 +1432,7 @@ impl AssistantService {
                     .unwrap_or_default())
             }
             AssistantSource::Generated | AssistantSource::User => {
-                let path = self.user_rule_path(id, locale);
-                Ok(read_file_or_empty(&path))
+                Ok(read_assistant_md_file(&self.user_rules_dir(), id, locale))
             }
         }
     }
@@ -1473,8 +1472,7 @@ impl AssistantService {
         match self.classify_source(id).await {
             AssistantSource::Builtin => Ok(String::new()),
             AssistantSource::Generated | AssistantSource::User => {
-                let path = self.user_skill_path(id, locale);
-                Ok(read_file_or_empty(&path))
+                Ok(read_assistant_md_file(&self.user_skills_dir(), id, locale))
             }
         }
     }
@@ -2548,26 +2546,65 @@ fn normalize_json_array_string(raw: Option<&str>, field: &str) -> Result<String,
 // ---------------------------------------------------------------------------
 
 fn assistant_md_path(dir: &Path, id: &str, locale: Option<&str>) -> PathBuf {
+    assistant_md_path_with_stem(dir, &assistant_file_stem(id), locale)
+}
+
+fn assistant_md_path_with_stem(dir: &Path, stem: &str, locale: Option<&str>) -> PathBuf {
     let filename = match locale {
-        Some(loc) if !loc.is_empty() => format!("{id}.{loc}.md"),
-        _ => format!("{id}.md"),
+        Some(loc) if !loc.is_empty() => format!("{stem}.{loc}.md"),
+        _ => format!("{stem}.md"),
     };
     dir.join(filename)
 }
 
-fn read_file_or_empty(path: &Path) -> String {
-    std::fs::read_to_string(path).unwrap_or_default()
+fn assistant_file_stem(id: &str) -> String {
+    const HEX: &[u8; 16] = b"0123456789ABCDEF";
+    let mut stem = String::with_capacity(id.len());
+    for byte in id.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_') {
+            stem.push(char::from(byte));
+        } else {
+            stem.push('%');
+            stem.push(char::from(HEX[(byte >> 4) as usize]));
+            stem.push(char::from(HEX[(byte & 0x0f) as usize]));
+        }
+    }
+    stem
+}
+
+fn read_assistant_md_file(dir: &Path, id: &str, locale: Option<&str>) -> String {
+    let path = assistant_md_path(dir, id, locale);
+    match std::fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(_) => {
+            let legacy_path = assistant_md_path_with_stem(dir, id, locale);
+            if legacy_path == path {
+                String::new()
+            } else {
+                std::fs::read_to_string(legacy_path).unwrap_or_default()
+            }
+        }
+    }
 }
 
 /// Remove every `{id}*.md` file in `dir`. Returns `true` if any file was
 /// deleted.
 fn remove_assistant_md_files(dir: &Path, id: &str) -> bool {
+    let stem = assistant_file_stem(id);
+    let mut deleted = remove_assistant_md_files_with_stem(dir, &stem);
+    if stem != id {
+        deleted |= remove_assistant_md_files_with_stem(dir, id);
+    }
+    deleted
+}
+
+fn remove_assistant_md_files_with_stem(dir: &Path, stem: &str) -> bool {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return false;
     };
     let mut deleted = false;
-    let prefix = format!("{id}.");
-    let exact = format!("{id}.md");
+    let prefix = format!("{stem}.");
+    let exact = format!("{stem}.md");
     for entry in entries.flatten() {
         let name = entry.file_name();
         let name = name.to_string_lossy();
