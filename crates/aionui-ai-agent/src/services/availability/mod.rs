@@ -65,7 +65,7 @@ impl AgentAvailabilityService {
             .await
             .ok_or_else(|| AgentError::not_found(format!("Agent '{id}' not found")))?;
 
-        if !meta.available {
+        if !meta.enabled {
             return self
                 .management_row_by_id(id)
                 .await
