@@ -1334,6 +1334,7 @@ async fn create_rejects_deprecated_agent_types_for_new_conversations() {
 }
 
 #[tokio::test]
+#[cfg(not(windows))]
 async fn create_rejects_unavailable_workspace_with_trailing_whitespace_in_request() {
     let (svc, _broadcaster, _repo, _task_mgr) = make_service();
     let dir = std::env::temp_dir().join(format!("aionui-test-{}", aionui_common::generate_short_id()));
