@@ -5,6 +5,8 @@
 //! version change, activate/deactivate execution, timeout behaviour,
 //! and graceful handling of missing scripts.
 
+#![cfg(unix)]
+
 use std::fs;
 use std::path::Path;
 

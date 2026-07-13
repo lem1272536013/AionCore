@@ -998,7 +998,13 @@ async fn replace_existing_path(path: &Path) -> Result<(), ExtensionError> {
         Err(e) => return Err(e.into()),
     };
 
-    if metadata.file_type().is_symlink() || metadata.is_file() {
+    if metadata.file_type().is_symlink() {
+        #[cfg(windows)]
+        if tokio::fs::remove_dir(path).await.is_ok() {
+            return Ok(());
+        }
+        tokio::fs::remove_file(path).await?;
+    } else if metadata.is_file() {
         tokio::fs::remove_file(path).await?;
     } else {
         tokio::fs::remove_dir_all(path).await?;
@@ -2767,7 +2773,7 @@ mod tests {
 
         let outcome = import_skills(&paths, &fresh_source).await.unwrap();
 
-        assert_eq!(outcome.imported, vec!["dangling"]);
+        assert_eq!(outcome.imported, vec!["dangling"], "failures: {:?}", outcome.failed);
         assert!(outcome.failed.is_empty());
         assert!(!target.is_symlink());
         assert!(target.join(SKILL_MANIFEST_FILE).exists());
