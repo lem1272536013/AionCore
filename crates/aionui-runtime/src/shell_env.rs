@@ -295,6 +295,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn platform_extra_bins_at_filters_nonexistent() {
         let tmp = tempfile::TempDir::new().unwrap();
         let home = tmp.path();

@@ -362,6 +362,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn linux_show_item_uses_filemanager1_when_gdbus_available() {
         let path = Path::new("/home/user/Downloads/AionUi.deb");
         let (program, args) = linux_show_item_command(path, true);
@@ -377,6 +378,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn linux_show_item_percent_encodes_spaces_in_uri() {
         let path = Path::new("/home/user/My Downloads/AionUi.deb");
         let (program, args) = linux_show_item_command(path, true);
@@ -388,6 +390,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn linux_show_item_falls_back_to_parent_dir_without_gdbus() {
         let path = Path::new("/home/user/Downloads/AionUi.deb");
         let (program, args) = linux_show_item_command(path, false);

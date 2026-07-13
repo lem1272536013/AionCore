@@ -367,10 +367,13 @@ fn resolve_program(program: &OsStr) -> OsString {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
     use crate::ResolvedCommand;
+    #[cfg(unix)]
     use std::time::{Duration, Instant};
 
     #[tokio::test]
+    #[cfg(unix)]
     async fn clean_cli_captures_stdout_and_strips_env_pollution() {
         if !crate::test_support::run_in_env_child(
             "spawn::tests::clean_cli_captures_stdout_and_strips_env_pollution",
@@ -395,6 +398,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(unix)]
     async fn clean_cli_sets_no_color_and_term_dumb() {
         let mut b = Builder::clean_cli("sh");
         b.arg("-c").arg("echo \"NC:${NO_COLOR:-unset} TERM:${TERM:-unset}\"");
@@ -406,6 +410,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(unix)]
     async fn agent_allows_stdio_override() {
         // agent() defaults to inherit. Override to piped, then verify
         // we can capture output.
@@ -418,6 +423,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(unix)]
     async fn agent_strips_env_pollution() {
         if !crate::test_support::run_in_env_child("spawn::tests::agent_strips_env_pollution", |command| {
             command.env("NODE_INSPECT", "9229").env("NODE_DEBUG", "*");
@@ -437,6 +443,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(unix)]
     async fn spawn_returns_child_with_pid() {
         let mut b = Builder::new("sh");
         b.arg("-c").arg("sleep 0.05");
@@ -447,6 +454,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn resolved_command_builder_applies_prefix_and_env() {
         let resolved = ResolvedCommand {
             program: "/bin/echo".into(),
@@ -464,6 +472,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn display_renders_shell_style_command() {
         let mut b = Builder::new("/usr/local/bin/bun");
         b.current_dir("/tmp/work dir")

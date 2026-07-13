@@ -1,6 +1,7 @@
 mod common;
 
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -1848,8 +1849,15 @@ async fn create_team_without_workspace_uses_leader_auto_workspace_for_all_initia
 
     let got = svc.get_team("user1", &created.id).await.unwrap();
     assert!(!got.workspace.trim().is_empty(), "teams.workspace must be set");
+    let workspace = Path::new(&got.workspace);
     assert!(
-        got.workspace.contains("/conversations/acp-temp-"),
+        workspace
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|name| name == "conversations")
+            && workspace
+                .file_name()
+                .is_some_and(|name| name.to_string_lossy().starts_with("acp-temp-")),
         "unexpected auto workspace: {}",
         got.workspace
     );
@@ -3075,8 +3083,7 @@ async fn add_agent_uses_team_temp_workspace_when_team_and_leader_workspaces_are_
 
     let got = svc.get_team("user1", &created.id).await.unwrap();
     assert!(
-        got.workspace
-            .contains(&format!("/conversations/team-temp-{}", created.id)),
+        Path::new(&got.workspace).ends_with(Path::new("conversations").join(format!("team-temp-{}", created.id))),
         "unexpected team temp workspace: {}",
         got.workspace
     );
@@ -3188,10 +3195,7 @@ async fn add_agent_continues_when_team_temp_leader_patch_fails() {
         .unwrap();
 
     let got = svc.get_team("user1", &created.id).await.unwrap();
-    assert!(
-        got.workspace
-            .contains(&format!("/conversations/team-temp-{}", created.id))
-    );
+    assert!(Path::new(&got.workspace).ends_with(Path::new("conversations").join(format!("team-temp-{}", created.id))));
     let added_extra = conv_repo.get_extra(&added.conversation_id).unwrap();
     assert_eq!(
         added_extra.get("workspace").and_then(serde_json::Value::as_str),
